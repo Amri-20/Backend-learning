@@ -4,16 +4,16 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const generateAcessAndRefreshToken = async (userId) => {
+const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const acessToken = user.generateAccessToken();
+    const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
-    return { acessToken, refreshToken };
+    return { accessToken, refreshToken };
   } catch (error) {
     throw new ApiError(
       500,
@@ -32,7 +32,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //   throw new APiError(400, "Full name is required");
   // }
   if (
-    [fullName, email, username, password].some((feild) => feild?.trim() === "")
+    [fullName, email, username, password].some((feild) => !feild?.trim())
   ) {
     throw new ApiError(400, "All feilds are required");
   }
@@ -46,7 +46,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   // console.log(req.files)
 
-  const avatarLocalPath = req.files?.avatar[0]?.path;
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
   // const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
 
   let coverImageLocalPath;
@@ -81,7 +81,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   const createdUser = await User.findById(user._id).select(
-    "-password -refreshtoken"
+    "-password -refreshToken"
   );
 
   if (!createdUser) {
@@ -90,12 +90,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new ApiResponse(200, createdUser, "Created User Sucessfully"));
+    .json(new ApiResponse(201, createdUser, "Created User Sucessfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
-  if (!username || !email) {
+  if (!(username || email)) {
     throw new ApiError(400, "Username or Email is required");
   }
 
@@ -112,7 +112,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid user credentials");
   }
 
-  const { acessToken, refreshToken } = await generateAcessAndRefreshToken(
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
 
@@ -122,19 +122,20 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
+    // secure: true,
+    secure: process.env.NODE_ENV === "production"
   };
 
   return res
     .status(200)
-    .cookie("acessToken", acessToken, options)
+    .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
         200,
         {
           user: loggedInUser,
-          acessToken,
+          accessToken,
           refreshToken,
         },
         "User LoggedIn Sucessfully"
@@ -162,8 +163,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .cookie("acessToken", options)
-    .cookie("refreshToken", options)
+    .clearcookie("accessToken", options)
+    .clearcookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged Out Sucessfully"));
 });
 

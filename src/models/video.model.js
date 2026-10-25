@@ -5,19 +5,19 @@ const videoSchema = new Schema(
   {
     videofile: {
       type: String,
-      reqired: true,
+      required: true,
     },
     thumbnail: {
       type: String,
-      reqired: true,
+      required: true,
     },
     title: {
       type: String,
-      reqired: true,
+      required: true,
     },
-    descreption: {
+    description: {
       type: String,
-      reqired: true,
+      required: true,
     },
     duration: {
       type: Number,
