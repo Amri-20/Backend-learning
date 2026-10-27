@@ -19,7 +19,7 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-    fullname: {
+    fullName: {
       type: String,
       required: true,
       trim: true,
@@ -29,7 +29,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    coverimage: {
+    coverImage: {
       type: String,
     },
     watchHistory: [
@@ -42,32 +42,31 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
     },
-    refreshtoken: {
+    refreshToken: {
       type: String,
     },
   },
   {
-    timestamp: true,
+    timestamps: true,
   }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToke = function () {
-  JsonWebTokenError.sign(
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
     {
       _id: this._id,
       email: this.email,
       username: this.username,
-      fullname: this.fullname,
+      fullName: this.fullName,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
@@ -75,8 +74,8 @@ userSchema.methods.generateAccessToke = function () {
     }
   );
 };
-userSchema.methods.generateRefreshToke = function () {
-    JsonWebTokenError.sign(
+userSchema.methods.generateRefreshToken = function () {
+    return jwt.sign(
     {
       _id: this._id,
     },
