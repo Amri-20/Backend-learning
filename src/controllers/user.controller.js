@@ -31,9 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // if (fullName === "") {
   //   throw new APiError(400, "Full name is required");
   // }
-  if (
-    [fullName, email, username, password].some((feild) => !feild?.trim())
-  ) {
+  if ([fullName, email, username, password].some((feild) => !feild?.trim())) {
     throw new ApiError(400, "All feilds are required");
   }
 
@@ -107,6 +105,8 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist");
   }
 
+  if (!password) throw new ApiError(400, "Password is required");
+  
   const passwordValid = await user.isPasswordCorrect(password);
   if (!passwordValid) {
     throw new ApiError(401, "Invalid user credentials");
@@ -123,7 +123,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     // secure: true,
-    secure: process.env.NODE_ENV === "production"
+    secure: process.env.NODE_ENV === "production",
   };
 
   return res
@@ -135,8 +135,8 @@ const loginUser = asyncHandler(async (req, res) => {
         200,
         {
           user: loggedInUser,
-          accessToken,
-          refreshToken,
+          // accessToken,
+          // refreshToken,
         },
         "User LoggedIn Sucessfully"
       )
@@ -158,13 +158,14 @@ const logoutUser = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
+    // secure: true,
+    secure: process.env.NODE_ENV === "production",
   };
 
   return res
     .status(200)
-    .clearcookie("accessToken", options)
-    .clearcookie("refreshToken", options)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged Out Sucessfully"));
 });
 
