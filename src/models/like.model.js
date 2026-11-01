@@ -5,12 +5,12 @@ const likeSchema = new Schema(
     video: {
       type: Schema.Types.ObjectId,
       ref: Video,
-      required: true,
+    //   required: true,
     },
     likedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+    //   required: true,
     },
     comment: {
       type: Schema.Types.ObjectId,
@@ -26,4 +26,4 @@ const likeSchema = new Schema(
   }
 );
 
-export const Likes = mongoose.model("Likes", likeSchema);
+export const Likes = mongoose.model("Like", likeSchema);
